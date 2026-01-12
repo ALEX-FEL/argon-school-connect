@@ -1,337 +1,320 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { Link } from "react-router-dom";
+import { TeacherLayout } from "@/components/layout/TeacherLayout";
 import { StatsCard } from "@/components/ui/stats-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Users,
-  BookOpen,
   ClipboardCheck,
+  BookOpen,
   MessageSquare,
-  Check,
-  X,
-  Clock,
   Plus,
-  FileText,
   Send,
   Image,
+  CheckCircle,
+  Clock,
+  ArrowRight,
+  Bell,
+  QrCode,
 } from "lucide-react";
-import { classes, eleves } from "@/data/mockData";
-import { cn } from "@/lib/utils";
+import { 
+  teacherStats, 
+  teacherClasses, 
+  teacherRappels, 
+  teacherMessages,
+  teacherRetraits,
+} from "@/data/teacherMockData";
 
-type AttendanceStatus = "present" | "absent" | "late" | "justified";
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
 
-interface StudentAttendance {
-  id: string;
-  nom: string;
-  prenom: string;
-  photo: string;
-  morning: AttendanceStatus;
-  afternoon: AttendanceStatus;
-  comment: string;
-}
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
 
 const TeacherDashboard = () => {
-  const { t } = useLanguage();
-  const [selectedClass, setSelectedClass] = useState("6ème A");
-  const [period, setPeriod] = useState<"morning" | "afternoon">("morning");
-  
-  const classStudents = eleves.filter((e) => e.classe === selectedClass);
-  
-  const [attendance, setAttendance] = useState<StudentAttendance[]>(
-    classStudents.map((s) => ({
-      id: s.id,
-      nom: s.nom,
-      prenom: s.prenom,
-      photo: s.photo,
-      morning: "present",
-      afternoon: "present",
-      comment: "",
-    }))
-  );
-
-  const updateAttendance = (studentId: string, status: AttendanceStatus) => {
-    setAttendance((prev) =>
-      prev.map((s) =>
-        s.id === studentId
-          ? { ...s, [period]: status }
-          : s
-      )
-    );
-  };
-
-  const markAllPresent = () => {
-    setAttendance((prev) =>
-      prev.map((s) => ({ ...s, [period]: "present" as AttendanceStatus }))
-    );
-  };
-
-  const getStatusColor = (status: AttendanceStatus) => {
-    switch (status) {
-      case "present": return "bg-success text-success-foreground";
-      case "absent": return "bg-danger text-danger-foreground";
-      case "late": return "bg-warning text-warning-foreground";
-      case "justified": return "bg-info text-info-foreground";
-    }
-  };
-
-  const getStatusIcon = (status: AttendanceStatus) => {
-    switch (status) {
-      case "present": return <Check size={14} />;
-      case "absent": return <X size={14} />;
-      case "late": return <Clock size={14} />;
-      case "justified": return <FileText size={14} />;
-    }
-  };
-
-  const presentCount = attendance.filter((s) => s[period] === "present").length;
-  const absentCount = attendance.filter((s) => s[period] === "absent").length;
+  const today = new Date().toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <DashboardLayout userRole="enseignant">
-      <PageHeader
-        title={`${t("welcome")}, M. Diallo`}
-        description={t("todayRollCall")}
-      />
+    <TeacherLayout>
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+        {/* Header */}
+        <motion.div variants={item} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              Bonjour, M. Diallo 👋
+            </h1>
+            <p className="text-muted-foreground capitalize">{today}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild>
+              <Link to="/enseignant/presence">
+                <ClipboardCheck size={18} className="mr-2" />
+                Faire l'appel
+              </Link>
+            </Button>
+          </div>
+        </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StatsCard
-          title={t("studentsPresent")}
-          value={`${presentCount}/${attendance.length}`}
-          icon={<Users size={20} />}
-          trend={{ value: 96, isPositive: true }}
-          variant="primary"
-        />
-        <StatsCard
-          title={t("homeworkAssigned")}
-          value="8"
-          icon={<BookOpen size={20} />}
-          variant="warning"
-        />
-        <StatsCard
-          title={t("pendingGrades")}
-          value="12"
-          icon={<ClipboardCheck size={20} />}
-          variant="info"
-        />
-        <StatsCard
-          title={t("unreadMessages")}
-          value="3"
-          icon={<MessageSquare size={20} />}
-          variant="danger"
-        />
-      </div>
+        {/* KPI Cards */}
+        <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard
+            title="Classes assignées"
+            value={teacherStats.classesAssignees}
+            icon={<Users size={20} />}
+            variant="primary"
+          />
+          <StatsCard
+            title="Élèves"
+            value={teacherStats.totalEleves}
+            icon={<Users size={20} />}
+            variant="info"
+          />
+          <StatsCard
+            title="Présences à faire"
+            value={teacherStats.presencesAFaire}
+            icon={<ClipboardCheck size={20} />}
+            variant={teacherStats.presencesAFaire > 0 ? "warning" : "success"}
+          />
+          <StatsCard
+            title="Devoirs en cours"
+            value={teacherStats.devoirsEnCours}
+            icon={<BookOpen size={20} />}
+            variant="secondary"
+          />
+        </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Roll Call Section */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardCheck className="text-primary" size={20} />
-              {t("todayRollCall")}
-            </CardTitle>
-            <div className="flex items-center gap-3">
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder={t("selectClass")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.nom}>
-                      {c.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex bg-muted rounded-lg p-1">
-                <Button
-                  variant={period === "morning" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setPeriod("morning")}
-                >
-                  {t("morning")}
-                </Button>
-                <Button
-                  variant={period === "afternoon" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setPeriod("afternoon")}
-                >
-                  {t("afternoon")}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex gap-4 text-sm">
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-success" />
-                  {t("present")}: {presentCount}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full bg-danger" />
-                  {t("absent")}: {absentCount}
-                </span>
-              </div>
-              <Button variant="outline" size="sm" onClick={markAllPresent}>
-                <Check size={16} className="mr-1" />
-                {t("markAllPresent")}
-              </Button>
-            </div>
-
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-              {attendance.map((student, index) => (
-                <motion.div
-                  key={student.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={student.photo} />
-                      <AvatarFallback>{student.prenom[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{student.prenom} {student.nom}</p>
-                      <p className="text-sm text-muted-foreground">{selectedClass}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {(["present", "absent", "late", "justified"] as AttendanceStatus[]).map(
-                      (status) => (
-                        <button
-                          key={status}
-                          onClick={() => updateAttendance(student.id, status)}
-                          className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                            student[period] === status
-                              ? getStatusColor(status)
-                              : "bg-background border hover:bg-muted"
-                          )}
-                          title={t(status)}
-                        >
-                          {getStatusIcon(status)}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-4 border-t">
-              <Button className="w-full" size="lg">
-                <Check size={18} className="mr-2" />
-                {t("validateRollCall")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions & Activity */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("quickActions")}</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="flex flex-col h-20 gap-2">
-                <Plus size={20} />
-                <span className="text-xs">{t("createHomework")}</span>
-              </Button>
-              <Button variant="outline" className="flex flex-col h-20 gap-2">
-                <ClipboardCheck size={20} />
-                <span className="text-xs">{t("enterGrades")}</span>
-              </Button>
-              <Button variant="outline" className="flex flex-col h-20 gap-2">
-                <Send size={20} />
-                <span className="text-xs">{t("sendMessage")}</span>
-              </Button>
-              <Button variant="outline" className="flex flex-col h-20 gap-2">
-                <Image size={20} />
-                <span className="text-xs">{t("publishContent")}</span>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("recentActivity")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { action: "Devoir créé", detail: "Mathématiques - 6ème A", time: "Il y a 2h", icon: <BookOpen size={16} /> },
-                  { action: "Note ajoutée", detail: "Ibrahim Koné - 15/20", time: "Il y a 3h", icon: <ClipboardCheck size={16} /> },
-                  { action: "Message reçu", detail: "M. Diop (parent)", time: "Il y a 5h", icon: <MessageSquare size={16} /> },
-                ].map((activity, i) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Rappels du jour */}
+          <motion.div variants={item} className="lg:col-span-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="text-primary" size={20} />
+                  Rappels du jour
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {teacherRappels.map((rappel, index) => (
                   <motion.div
-                    key={i}
+                    key={rappel.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="flex items-start gap-3"
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                      {activity.icon}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-xs text-muted-foreground">{activity.detail}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{activity.time}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("myClasses")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {["6ème A", "5ème A"].map((classe) => (
-                  <div
-                    key={classe}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Users size={18} className="text-primary" />
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        rappel.type === "presence" ? "bg-primary/10 text-primary" :
+                        rappel.type === "notes" ? "bg-info/10 text-info" :
+                        "bg-warning/10 text-warning"
+                      }`}>
+                        {rappel.type === "presence" ? <ClipboardCheck size={18} /> :
+                         rappel.type === "notes" ? <BookOpen size={18} /> :
+                         <Users size={18} />}
                       </div>
                       <div>
-                        <p className="font-medium">{classe}</p>
-                        <p className="text-sm text-muted-foreground">32 {t("students").toLowerCase()}</p>
+                        <p className="font-medium">{rappel.titre}</p>
+                        <p className="text-sm text-muted-foreground">{rappel.heure}</p>
                       </div>
                     </div>
-                    <Badge variant="secondary">
-                      {classe === selectedClass ? t("active") : ""}
+                    <Button variant="ghost" size="sm">
+                      <CheckCircle size={16} />
+                    </Button>
+                  </motion.div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Actions rapides */}
+          <motion.div variants={item}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions rapides</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <Button variant="outline" className="flex flex-col h-20 gap-2" asChild>
+                  <Link to="/enseignant/presence">
+                    <ClipboardCheck size={20} />
+                    <span className="text-xs">Faire l'appel</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="flex flex-col h-20 gap-2" asChild>
+                  <Link to="/enseignant/devoirs">
+                    <Plus size={20} />
+                    <span className="text-xs">Créer devoir</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="flex flex-col h-20 gap-2" asChild>
+                  <Link to="/enseignant/annonces">
+                    <Send size={20} />
+                    <span className="text-xs">Annonce</span>
+                  </Link>
+                </Button>
+                <Button variant="outline" className="flex flex-col h-20 gap-2" asChild>
+                  <Link to="/enseignant/galerie">
+                    <Image size={20} />
+                    <span className="text-xs">Galerie</span>
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Mes classes */}
+          <motion.div variants={item}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="text-primary" size={20} />
+                  Mes classes
+                </CardTitle>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/enseignant/classes">
+                    Voir tout <ArrowRight size={14} className="ml-1" />
+                  </Link>
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {teacherClasses.slice(0, 3).map((classe) => (
+                  <Link 
+                    key={classe.id} 
+                    to={`/enseignant/classes/${classe.id}`}
+                    className="block"
+                  >
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <span className="font-bold text-primary">{classe.nom.charAt(0)}</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold">{classe.nom}</p>
+                          <p className="text-sm text-muted-foreground">{classe.effectif} élèves • {classe.matiere}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{classe.tauxPresence}%</p>
+                        <p className="text-xs text-muted-foreground">Présence</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Derniers messages */}
+          <motion.div variants={item}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="text-primary" size={20} />
+                  Messages récents
+                  {teacherStats.messagesNonLus > 0 && (
+                    <Badge variant="destructive" className="ml-2">
+                      {teacherStats.messagesNonLus}
                     </Badge>
+                  )}
+                </CardTitle>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/enseignant/messagerie">
+                    Voir tout <ArrowRight size={14} className="ml-1" />
+                  </Link>
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {teacherMessages.slice(0, 3).map((message) => (
+                  <div 
+                    key={message.id} 
+                    className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${
+                      !message.lu ? "bg-primary/5 border border-primary/20" : "bg-muted/50"
+                    }`}
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={message.avatar} />
+                      <AvatarFallback>{message.expediteur.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-sm truncate">{message.expediteur}</p>
+                        <span className="text-xs text-muted-foreground">
+                          {message.date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{message.role}</p>
+                      <p className="text-sm mt-1 line-clamp-1">{message.contenu}</p>
+                    </div>
+                    {!message.lu && (
+                      <div className="w-2 h-2 rounded-full bg-primary mt-2" />
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Autorisations de retrait */}
+        <motion.div variants={item}>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <QrCode className="text-primary" size={20} />
+                Autorisations de retrait du jour
+              </CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/enseignant/retrait">
+                  Scanner QR <ArrowRight size={14} className="ml-1" />
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {teacherRetraits.filter(r => r.statut === "valide").slice(0, 3).map((retrait) => (
+                  <div 
+                    key={retrait.id}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-muted/50"
+                  >
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={retrait.photo} />
+                      <AvatarFallback>{retrait.eleve.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{retrait.eleve}</p>
+                      <p className="text-sm text-muted-foreground">{retrait.classe}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {retrait.personneAutorisee}
+                        </Badge>
+                        {retrait.heure && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock size={12} /> {retrait.heure}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </DashboardLayout>
+        </motion.div>
+      </motion.div>
+    </TeacherLayout>
   );
 };
 
