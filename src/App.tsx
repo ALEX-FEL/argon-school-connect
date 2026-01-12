@@ -9,7 +9,19 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ParentDashboard from "./pages/parent/Dashboard";
+
+// Teacher pages
 import TeacherDashboard from "./pages/teacher/Dashboard";
+import TeacherClasses from "./pages/teacher/Classes";
+import TeacherPresence from "./pages/teacher/Presence";
+import TeacherDevoirs from "./pages/teacher/Devoirs";
+import TeacherNotes from "./pages/teacher/Notes";
+import TeacherMessagerie from "./pages/teacher/Messagerie";
+import TeacherAnnonces from "./pages/teacher/Annonces";
+import TeacherGalerie from "./pages/teacher/Galerie";
+import TeacherRetrait from "./pages/teacher/Retrait";
+import TeacherRapports from "./pages/teacher/Rapports";
+import TeacherParametres from "./pages/teacher/Parametres";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -60,6 +72,17 @@ const App = () => (
             
             {/* Teacher routes */}
             <Route path="/enseignant/dashboard" element={<TeacherDashboard />} />
+            <Route path="/enseignant/classes" element={<TeacherClasses />} />
+            <Route path="/enseignant/classes/:id" element={<TeacherClasses />} />
+            <Route path="/enseignant/presence" element={<TeacherPresence />} />
+            <Route path="/enseignant/devoirs" element={<TeacherDevoirs />} />
+            <Route path="/enseignant/notes" element={<TeacherNotes />} />
+            <Route path="/enseignant/messagerie" element={<TeacherMessagerie />} />
+            <Route path="/enseignant/annonces" element={<TeacherAnnonces />} />
+            <Route path="/enseignant/galerie" element={<TeacherGalerie />} />
+            <Route path="/enseignant/retrait" element={<TeacherRetrait />} />
+            <Route path="/enseignant/rapports" element={<TeacherRapports />} />
+            <Route path="/enseignant/parametres" element={<TeacherParametres />} />
             <Route path="/enseignant/*" element={<TeacherDashboard />} />
             
             {/* Admin routes */}
